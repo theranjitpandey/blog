@@ -60,7 +60,7 @@ export const profileConfig: ProfileConfig = {
 		{
 			name: "Instagram",
 			icon: "fa6-brands:instagram",
-			url: "https://instagram.com/theranijtpandey",
+			url: "https://instagram.com/theranjitpandey",
 		},
 		{
 			name: "Twitter",

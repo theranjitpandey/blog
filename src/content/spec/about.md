@@ -1,4 +1,4 @@
 # About
-This is the demo site for [Ranjit](https://github.com/theranjitpandey).
+All Project and details [Ranjit](https://github.com/theranjitpandey).
 
-::github{repo="theranjitpandey"}
+::github{repo="theranjitpandey/blog"}

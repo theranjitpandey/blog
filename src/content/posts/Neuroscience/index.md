@@ -2,7 +2,7 @@
 title: Neuroscience Basics
 published: 2025-07-21
 description: "Understanding the brain and nervous system through neuroscience."
-image: "./cover.JPG"
+image: "./cover.jpeg"
 tags: ["Neuroscience", "Brain", "Science", "Learning"]
 category: Science
 draft: false

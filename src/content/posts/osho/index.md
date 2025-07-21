@@ -1,3 +1,4 @@
+```yaml
 ---
 title: ओशो विचार #1
 description: "प्यार एक खुशबू है, जिसे महसूस किया जा सकता है लेकिन पकड़ा नहीं जा सकता।"
@@ -157,3 +158,4 @@ tags: [Osho, Spirituality, Hindi]
 category: Quotes
 draft: false
 ---
+```

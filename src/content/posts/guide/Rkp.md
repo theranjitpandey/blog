@@ -1,11 +1,11 @@
 ---
-title: Understanding the Human Brain: An Introduction to Neuroscience  
-published: 2025-07-21  
-description: "A beginner-friendly guide to the fascinating world of neuroscience."  
-image: "./brain-cover.jpg"  
-tags: ["Neuroscience", "Brain", "Science"]  
-category: Neuroscience  
-draft: false  
+title: "Understanding the Human Brain: An Introduction to Neuroscience"
+published: 2025-07-21
+description: "A beginner-friendly guide to the fascinating world of neuroscience."
+image: "./brain-cover.jpg"
+tags: ["Neuroscience", "Brain", "Science"]
+category: Neuroscience
+draft: false
 ---
 
 ## 🧠 Introduction

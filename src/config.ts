@@ -56,7 +56,9 @@ export const navBarConfig: NavBarConfig = {
 export const profileConfig: ProfileConfig = {
 	avatar: "assets/images/demo-avatar.png", // Relative to the /src directory. Relative to the /public directory if it starts with '/'
 	name: "Ranjit Pandey",
-	bio: "ꜱᴄɪᴇɴᴄᴇ ꜰᴏʀ ʙᴇᴛᴛᴇʀ ʙᴇɪɴɢ 🧠 ᴍɪɴᴅ • ɴᴇᴜʀᴏꜱᴄɪᴇɴᴄᴇ • ʀᴇꜱᴇᴀʀᴄʜ 💻 ꜱᴏꜰᴛᴡᴀʀᴇ • ʙᴏᴏᴋꜱ • ᴡɪꜱᴅᴏᴍ ⌬ ᴋɴᴏᴡʟᴇᴅɢᴇ. ᴅɪꜱᴄɪᴘʟɪɴᴇ. ʟɪꜰᴇꜱᴛʏʟᴇ.",
+	bio: "🧠 ᴍɪɴᴅ || ɴᴇᴜʀᴏꜱᴄɪᴇɴᴄᴇ || ʀᴇꜱᴇᴀʀᴄʜ ",
+	bio: "💻 ꜱᴏꜰᴛᴡᴀʀᴇ || ʙᴏᴏᴋꜱ || ᴋɴᴏᴡʟᴇᴅɢᴇ || ʟɪꜰᴇꜱᴛʏʟᴇ.",
+	
 	links: [
 		{
 			name: "Instagram",

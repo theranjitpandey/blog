@@ -1,0 +1,124 @@
+---
+import { Icon } from "astro-icon/components";
+import { profileConfig } from "../../config";
+import ImageWrapper from "../misc/ImageWrapper.astro";
+---
+
+<div class="card-base rounded-[var(--radius-large)] p-4 md:p-5 mb-6">
+	<div class="flex items-start gap-3">
+		<div class="w-11 h-11 rounded-full overflow-hidden shrink-0">
+			<ImageWrapper src={profileConfig.avatar || ""} alt={profileConfig.name} class="w-full h-full" />
+		</div>
+		<form id="composer-form" class="flex-1">
+			<textarea
+				id="composer-textarea"
+				name="content"
+				rows="3"
+				placeholder="Aap kya soch rahe hain?"
+				class="w-full rounded-2xl bg-black/[0.04] dark:bg-white/[0.08] p-3 text-90 outline-none focus:ring-2 focus:ring-[var(--primary)]/40 resize-none"
+			></textarea>
+
+			<div id="composer-preview-wrap" class="relative mt-2 hidden">
+				<img id="composer-preview" alt="" class="w-full max-h-[320px] object-cover rounded-xl" />
+				<button
+					type="button"
+					id="composer-remove-image"
+					class="absolute top-2 right-2 bg-black/60 hover:bg-black/80 text-white rounded-full w-8 h-8 flex items-center justify-center"
+					aria-label="Remove photo"
+				>
+					<Icon name="material-symbols:close" class="text-[1.1rem]" />
+				</button>
+			</div>
+
+			<div id="composer-error" class="text-sm text-red-500 mt-2 hidden"></div>
+
+			<div class="flex items-center justify-between mt-3 pt-3 border-t border-black/10 dark:border-white/10">
+				<label class="btn-plain scale-animation rounded-lg h-10 px-3 flex items-center gap-2 cursor-pointer active:scale-95">
+					<Icon name="material-symbols:add-photo-alternate-outline" class="text-[1.3rem] text-green-600" />
+					<span class="text-sm font-medium">Photo</span>
+					<input type="file" id="composer-file-input" accept="image/jpeg,image/png,image/webp,image/gif" class="hidden" />
+				</label>
+				<button
+					type="submit"
+					id="composer-submit"
+					class="btn-regular rounded-lg px-6 h-10 font-bold active:scale-95 disabled:opacity-50"
+				>
+					Post
+				</button>
+			</div>
+		</form>
+	</div>
+</div>
+
+<script>
+	const form = document.getElementById("composer-form") as HTMLFormElement;
+	const textarea = document.getElementById("composer-textarea") as HTMLTextAreaElement;
+	const fileInput = document.getElementById("composer-file-input") as HTMLInputElement;
+	const previewWrap = document.getElementById("composer-preview-wrap") as HTMLElement;
+	const preview = document.getElementById("composer-preview") as HTMLImageElement;
+	const removeImageBtn = document.getElementById("composer-remove-image") as HTMLElement;
+	const errorEl = document.getElementById("composer-error") as HTMLElement;
+	const submitBtn = document.getElementById("composer-submit") as HTMLButtonElement;
+
+	let selectedFile: File | null = null;
+
+	fileInput?.addEventListener("change", () => {
+		const file = fileInput.files?.[0];
+		if (!file) return;
+		selectedFile = file;
+		preview.src = URL.createObjectURL(file);
+		previewWrap.classList.remove("hidden");
+	});
+
+	removeImageBtn?.addEventListener("click", () => {
+		selectedFile = null;
+		fileInput.value = "";
+		previewWrap.classList.add("hidden");
+	});
+
+	function showError(msg: string) {
+		errorEl.textContent = msg;
+		errorEl.classList.remove("hidden");
+	}
+
+	form?.addEventListener("submit", async (e) => {
+		e.preventDefault();
+		errorEl.classList.add("hidden");
+
+		const content = textarea.value.trim();
+		if (!content && !selectedFile) {
+			showError("Kuch likhein ya photo lagayein.");
+			return;
+		}
+
+		submitBtn.disabled = true;
+		submitBtn.textContent = "Posting...";
+
+		try {
+			let image_url: string | null = null;
+			if (selectedFile) {
+				const fd = new FormData();
+				fd.append("file", selectedFile);
+				const uploadRes = await fetch("/api/upload/", { method: "POST", body: fd });
+				const uploadData = await uploadRes.json();
+				if (!uploadRes.ok) throw new Error(uploadData.error || "Photo upload fail ho gayi.");
+				image_url = uploadData.url;
+			}
+
+			const res = await fetch("/api/updates/", {
+				method: "POST",
+				headers: { "Content-Type": "application/json" },
+				body: JSON.stringify({ content, image_url }),
+			});
+			const data = await res.json();
+			if (!res.ok) throw new Error(data.error || "Post fail ho gayi.");
+
+			// Reload so the new post appears via the (still-static-per-request) list.
+			window.location.reload();
+		} catch (err) {
+			showError((err as Error).message);
+			submitBtn.disabled = false;
+			submitBtn.textContent = "Post";
+		}
+	});
+</script>

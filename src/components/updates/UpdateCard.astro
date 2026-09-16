@@ -1,0 +1,164 @@
+---
+import { Icon } from "astro-icon/components";
+import { profileConfig } from "../../config";
+import ImageWrapper from "../misc/ImageWrapper.astro";
+
+interface UpdateComment {
+	id: string;
+	author_name: string;
+	content: string;
+	created_at: string;
+}
+
+interface Props {
+	id: string;
+	content: string;
+	image_url: string | null;
+	likes_count: number;
+	comments_count: number;
+	created_at: string;
+	liked: boolean;
+	isAdmin?: boolean;
+	comments?: UpdateComment[];
+}
+
+const {
+	id,
+	content,
+	image_url,
+	likes_count,
+	comments_count,
+	created_at,
+	liked,
+	isAdmin = false,
+	comments = [],
+} = Astro.props;
+
+const dateLabel = new Date(created_at).toLocaleString("en-IN", {
+	day: "numeric",
+	month: "short",
+	year: "numeric",
+	hour: "numeric",
+	minute: "2-digit",
+});
+---
+
+<div class="update-card card-base rounded-[var(--radius-large)] overflow-hidden mb-4" data-update-id={id}>
+	<div class="p-4 md:p-5">
+		<div class="flex items-center justify-between">
+			<div class="flex items-center gap-3">
+				<div class="w-11 h-11 rounded-full overflow-hidden shrink-0">
+					<ImageWrapper src={profileConfig.avatar || ""} alt={profileConfig.name} class="w-full h-full" />
+				</div>
+				<div>
+					<div class="font-bold text-90 leading-tight">{profileConfig.name}</div>
+					<div class="text-xs text-black/40 dark:text-white/40 flex items-center gap-1">
+						{dateLabel}
+						<Icon name="material-symbols:public" class="text-[0.8rem]" />
+					</div>
+				</div>
+			</div>
+
+			{isAdmin && (
+				<div class="flex gap-1">
+					<button
+						type="button"
+						class="btn-plain scale-animation rounded-lg h-9 w-9 active:scale-90"
+						data-edit-btn
+						aria-label="Edit post"
+					>
+						<Icon name="material-symbols:edit-outline" class="text-[1.1rem]" />
+					</button>
+					<button
+						type="button"
+						class="btn-plain scale-animation rounded-lg h-9 w-9 active:scale-90 hover:!text-red-500"
+						data-delete-btn
+						aria-label="Delete post"
+					>
+						<Icon name="material-symbols:delete-outline" class="text-[1.1rem]" />
+					</button>
+				</div>
+			)}
+		</div>
+
+		<div class="update-content text-90 whitespace-pre-wrap mt-3 leading-relaxed" data-content>{content}</div>
+	</div>
+
+	{image_url && (
+		<img src={image_url} alt="" class="w-full max-h-[520px] object-cover" loading="lazy" />
+	)}
+
+	<div class="px-4 md:px-5 pt-2 flex items-center justify-between text-sm text-black/40 dark:text-white/40">
+		<div class="flex items-center gap-1" data-likes-count-wrap>
+			<Icon name="material-symbols:favorite" class="text-[var(--primary)] text-[1rem]" />
+			<span data-likes-count>{likes_count}</span>
+		</div>
+		<button type="button" class="hover:underline" data-comment-count-toggle>
+			<span data-comments-count>{comments_count}</span> comments
+		</button>
+	</div>
+
+	<div class="mx-4 md:mx-5 my-2 border-t border-black/10 dark:border-white/10"></div>
+
+	<div class="px-2 md:px-3 pb-2 flex items-center">
+		<button
+			type="button"
+			class:list={["update-like-btn flex-1 flex items-center justify-center gap-2 py-2 rounded-lg transition font-medium hover:bg-black/5 dark:hover:bg-white/10", { "text-[var(--primary)]": liked, "text-black/60 dark:text-white/60": !liked }]}
+			data-like-btn
+			data-liked={liked ? "1" : "0"}
+		>
+			<Icon name={liked ? "material-symbols:favorite" : "material-symbols:favorite-outline"} class="text-[1.2rem]" data-like-icon />
+			<span data-like-label>{liked ? "Liked" : "Like"}</span>
+		</button>
+		<button
+			type="button"
+			class="flex-1 flex items-center justify-center gap-2 py-2 rounded-lg transition font-medium text-black/60 dark:text-white/60 hover:bg-black/5 dark:hover:bg-white/10"
+			data-comment-toggle
+		>
+			<Icon name="material-symbols:chat-bubble-outline-rounded" class="text-[1.2rem]" />
+			Comment
+		</button>
+	</div>
+
+	<div class="update-comments px-4 md:px-5 pb-4 hidden" data-comments-section>
+		<div class="border-t border-black/10 dark:border-white/10 pt-3 space-y-3" data-comments-list>
+			{comments.map((c) => (
+				<div class="flex items-start gap-2 group/comment" data-comment-id={c.id}>
+					<div class="w-7 h-7 rounded-full bg-[var(--primary)]/20 flex items-center justify-center text-xs font-bold text-[var(--primary)] shrink-0">
+						{c.author_name.slice(0, 1).toUpperCase()}
+					</div>
+					<div class="flex-1 bg-black/[0.03] dark:bg-white/[0.06] rounded-2xl px-3 py-2">
+						<div class="text-sm font-bold text-90">{c.author_name}</div>
+						<div class="text-sm text-75 whitespace-pre-wrap">{c.content}</div>
+					</div>
+					{isAdmin && (
+						<button type="button" class="btn-plain scale-animation rounded-lg h-7 w-7 shrink-0 opacity-0 group-hover/comment:opacity-100" data-delete-comment-btn aria-label="Delete comment">
+							<Icon name="material-symbols:close" class="text-[0.9rem]" />
+						</button>
+					)}
+				</div>
+			))}
+		</div>
+
+		<form class="flex items-center gap-2 mt-3" data-comment-form>
+			<input
+				type="text"
+				name="author_name"
+				placeholder="Aapka naam"
+				maxlength="60"
+				class="w-28 md:w-32 shrink-0 rounded-full bg-black/[0.04] dark:bg-white/[0.08] px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-[var(--primary)]/40"
+			/>
+			<input
+				type="text"
+				name="content"
+				placeholder="Comment likhein..."
+				maxlength="1000"
+				required
+				class="flex-1 rounded-full bg-black/[0.04] dark:bg-white/[0.08] px-4 py-2 text-sm outline-none focus:ring-2 focus:ring-[var(--primary)]/40"
+			/>
+			<button type="submit" class="btn-plain scale-animation rounded-full h-9 w-9 shrink-0 active:scale-90" aria-label="Send comment">
+				<Icon name="material-symbols:send-outline" class="text-[1.1rem] text-[var(--primary)]" />
+			</button>
+		</form>
+	</div>
+</div>

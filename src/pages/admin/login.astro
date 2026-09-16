@@ -1,0 +1,63 @@
+---
+export const prerender = false;
+
+import MainGridLayout from "@layouts/MainGridLayout.astro";
+import { isAdminRequest } from "@lib/auth";
+
+// Already logged in? go straight to the composer.
+if (isAdminRequest(Astro.cookies)) {
+	return Astro.redirect("/admin/");
+}
+---
+
+<MainGridLayout title="Admin Login">
+	<div class="card-base rounded-[var(--radius-large)] p-6 md:p-8 max-w-md mx-auto">
+		<div class="font-bold text-xl text-90 mb-4">Admin Login</div>
+		<form id="login-form" class="space-y-3">
+			<input
+				type="password"
+				id="login-password"
+				name="password"
+				placeholder="Password"
+				required
+				autofocus
+				class="w-full rounded-lg bg-black/[0.04] dark:bg-white/[0.08] p-3 outline-none focus:ring-2 focus:ring-[var(--primary)]/40"
+			/>
+			<div id="login-error" class="text-sm text-red-500 hidden"></div>
+			<button
+				type="submit"
+				id="login-submit"
+				class="btn-regular rounded-lg w-full h-11 font-bold active:scale-95 disabled:opacity-50"
+			>
+				Login
+			</button>
+		</form>
+	</div>
+</MainGridLayout>
+
+<script>
+	const form = document.getElementById("login-form") as HTMLFormElement;
+	const passwordInput = document.getElementById("login-password") as HTMLInputElement;
+	const errorEl = document.getElementById("login-error") as HTMLElement;
+	const submitBtn = document.getElementById("login-submit") as HTMLButtonElement;
+
+	form?.addEventListener("submit", async (e) => {
+		e.preventDefault();
+		errorEl.classList.add("hidden");
+		submitBtn.disabled = true;
+		try {
+			const res = await fetch("/api/auth/login/", {
+				method: "POST",
+				headers: { "Content-Type": "application/json" },
+				body: JSON.stringify({ password: passwordInput.value }),
+			});
+			const data = await res.json();
+			if (!res.ok) throw new Error(data.error || "Login fail ho gaya.");
+			window.location.href = "/admin/";
+		} catch (err) {
+			errorEl.textContent = (err as Error).message;
+			errorEl.classList.remove("hidden");
+			submitBtn.disabled = false;
+		}
+	});
+</script>

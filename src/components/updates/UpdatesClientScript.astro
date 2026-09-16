@@ -1,0 +1,216 @@
+---
+// Include this component exactly once on any page that renders <UpdateCard>.
+// It uses event delegation on `document`, so it keeps working even after
+// swup swaps the page content client-side.
+---
+<script>
+	function findCard(el: Element | null): HTMLElement | null {
+		return el ? (el.closest(".update-card") as HTMLElement | null) : null;
+	}
+
+	async function postJSON(url: string, body?: unknown) {
+		const res = await fetch(url, {
+			method: "POST",
+			headers: body ? { "Content-Type": "application/json" } : undefined,
+			body: body ? JSON.stringify(body) : undefined,
+		});
+		const data = await res.json().catch(() => ({}));
+		if (!res.ok) throw new Error(data.error || "Kuch galat ho gaya.");
+		return data;
+	}
+
+	document.addEventListener("click", async (e) => {
+		const target = e.target as HTMLElement;
+
+		// --- Like toggle ---
+		const likeBtn = target.closest("[data-like-btn]") as HTMLElement | null;
+		if (likeBtn) {
+			const card = findCard(likeBtn);
+			if (!card) return;
+			const id = card.dataset.updateId;
+			likeBtn.setAttribute("disabled", "true");
+			try {
+				const data = await postJSON(`/api/updates/${id}/like/`);
+				const icon = likeBtn.querySelector("[data-like-icon]");
+				const label = likeBtn.querySelector("[data-like-label]");
+				const countEl = card.querySelector("[data-likes-count]");
+				if (countEl) countEl.textContent = String(data.likes_count);
+				if (label) label.textContent = data.liked ? "Liked" : "Like";
+				likeBtn.classList.toggle("text-[var(--primary)]", data.liked);
+				likeBtn.classList.toggle("text-black/60", !data.liked);
+				likeBtn.classList.toggle("dark:text-white/60", !data.liked);
+				if (icon) {
+					icon.setAttribute(
+						"data-icon",
+						data.liked ? "material-symbols:favorite" : "material-symbols:favorite-outline",
+					);
+				}
+			} catch (err) {
+				console.error(err);
+			} finally {
+				likeBtn.removeAttribute("disabled");
+			}
+			return;
+		}
+
+		// --- Toggle comments section open/closed ---
+		const commentToggle = target.closest("[data-comment-toggle], [data-comment-count-toggle]");
+		if (commentToggle) {
+			const card = findCard(commentToggle);
+			const section = card?.querySelector("[data-comments-section]");
+			section?.classList.toggle("hidden");
+			return;
+		}
+
+		// --- Delete post (admin) ---
+		const deleteBtn = target.closest("[data-delete-btn]") as HTMLElement | null;
+		if (deleteBtn) {
+			const card = findCard(deleteBtn);
+			if (!card) return;
+			if (!confirm("Yeh post delete karni hai?")) return;
+			const id = card.dataset.updateId;
+			try {
+				const res = await fetch(`/api/updates/${id}/`, { method: "DELETE" });
+				if (!res.ok) throw new Error("Delete fail ho gaya.");
+				card.remove();
+			} catch (err) {
+				alert((err as Error).message);
+			}
+			return;
+		}
+
+		// --- Edit post (admin) ---
+		const editBtn = target.closest("[data-edit-btn]") as HTMLElement | null;
+		if (editBtn) {
+			const card = findCard(editBtn);
+			if (!card) return;
+			const contentEl = card.querySelector("[data-content]") as HTMLElement | null;
+			if (!contentEl) return;
+
+			if (card.dataset.editing === "1") return;
+			card.dataset.editing = "1";
+			const original = contentEl.textContent || "";
+
+			const textarea = document.createElement("textarea");
+			textarea.value = original;
+			textarea.className =
+				"w-full rounded-lg bg-black/[0.04] dark:bg-white/[0.08] p-3 text-sm outline-none focus:ring-2 focus:ring-[var(--primary)]/40 resize-y";
+			textarea.rows = 4;
+
+			const saveBtn = document.createElement("button");
+			saveBtn.textContent = "Save";
+			saveBtn.type = "button";
+			saveBtn.className =
+				"btn-regular rounded-lg px-4 py-1.5 text-sm font-bold mt-2 mr-2 active:scale-95";
+
+			const cancelBtn = document.createElement("button");
+			cancelBtn.textContent = "Cancel";
+			cancelBtn.type = "button";
+			cancelBtn.className = "btn-plain rounded-lg px-4 py-1.5 text-sm mt-2 active:scale-95";
+
+			contentEl.replaceWith(textarea);
+			textarea.after(saveBtn, cancelBtn);
+			textarea.focus();
+
+			const restore = (text: string) => {
+				const p = document.createElement("div");
+				p.className = "update-content text-90 whitespace-pre-wrap mt-3 leading-relaxed";
+				p.setAttribute("data-content", "");
+				p.textContent = text;
+				textarea.replaceWith(p);
+				saveBtn.remove();
+				cancelBtn.remove();
+				card.dataset.editing = "0";
+			};
+
+			cancelBtn.addEventListener("click", () => restore(original));
+			saveBtn.addEventListener("click", async () => {
+				const id = card.dataset.updateId;
+				saveBtn.setAttribute("disabled", "true");
+				try {
+					await fetch(`/api/updates/${id}/`, {
+						method: "PUT",
+						headers: { "Content-Type": "application/json" },
+						body: JSON.stringify({ content: textarea.value }),
+					});
+					restore(textarea.value);
+				} catch (err) {
+					alert("Save fail ho gaya.");
+				} finally {
+					saveBtn.removeAttribute("disabled");
+				}
+			});
+			return;
+		}
+
+		// --- Delete a single comment (admin) ---
+		const delCommentBtn = target.closest("[data-delete-comment-btn]") as HTMLElement | null;
+		if (delCommentBtn) {
+			const card = findCard(delCommentBtn);
+			const commentEl = delCommentBtn.closest("[data-comment-id]") as HTMLElement | null;
+			if (!card || !commentEl) return;
+			if (!confirm("Yeh comment delete karna hai?")) return;
+			const updateId = card.dataset.updateId;
+			const commentId = commentEl.dataset.commentId;
+			try {
+				await fetch(`/api/updates/${updateId}/comments/${commentId}/`, { method: "DELETE" });
+				commentEl.remove();
+				const countEl = card.querySelector("[data-comments-count]");
+				if (countEl) countEl.textContent = String(Math.max(0, Number(countEl.textContent) - 1));
+			} catch (err) {
+				alert("Delete fail ho gaya.");
+			}
+			return;
+		}
+	});
+
+	document.addEventListener("submit", async (e) => {
+		const form = e.target as HTMLElement;
+		if (!form.matches("[data-comment-form]")) return;
+		e.preventDefault();
+
+		const card = findCard(form);
+		if (!card) return;
+		const id = card.dataset.updateId;
+
+		const formEl = form as HTMLFormElement;
+		const authorInput = formEl.elements.namedItem("author_name") as HTMLInputElement;
+		const contentInput = formEl.elements.namedItem("content") as HTMLInputElement;
+		const content = contentInput.value.trim();
+		if (!content) return;
+
+		try {
+			const data = await postJSON(`/api/updates/${id}/comments/`, {
+				author_name: authorInput.value.trim(),
+				content,
+			});
+
+			const list = card.querySelector("[data-comments-list]");
+			if (list) {
+				const row = document.createElement("div");
+				row.className = "flex items-start gap-2 group/comment";
+				row.dataset.commentId = data.comment.id;
+				const initial = (data.comment.author_name || "A").slice(0, 1).toUpperCase();
+				row.innerHTML = `
+					<div class="w-7 h-7 rounded-full bg-[var(--primary)]/20 flex items-center justify-center text-xs font-bold text-[var(--primary)] shrink-0">${initial}</div>
+					<div class="flex-1 bg-black/[0.03] dark:bg-white/[0.06] rounded-2xl px-3 py-2">
+						<div class="text-sm font-bold text-90"></div>
+						<div class="text-sm text-75 whitespace-pre-wrap"></div>
+					</div>
+				`;
+				const nameEl = row.querySelector(".text-90") as HTMLElement;
+				const bodyEl = row.querySelector(".text-75") as HTMLElement;
+				nameEl.textContent = data.comment.author_name;
+				bodyEl.textContent = data.comment.content;
+				list.appendChild(row);
+			}
+
+			const countEl = card.querySelector("[data-comments-count]");
+			if (countEl) countEl.textContent = String(Number(countEl.textContent) + 1);
+
+			contentInput.value = "";
+		} catch (err) {
+			alert((err as Error).message);
+		}
+	});
+</script>

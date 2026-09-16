@@ -1,0 +1,64 @@
+---
+export const prerender = false;
+
+import MainGridLayout from "@layouts/MainGridLayout.astro";
+import { supabase } from "@lib/supabase";
+import UpdateCard from "@components/updates/UpdateCard.astro";
+import UpdatesClientScript from "@components/updates/UpdatesClientScript.astro";
+
+const { data: updates, error } = await supabase
+	.from("updates")
+	.select("*")
+	.order("created_at", { ascending: false })
+	.limit(50);
+
+const ids = (updates ?? []).map((u) => u.id);
+const { data: allComments } =
+	ids.length > 0
+		? await supabase
+				.from("update_comments")
+				.select("*")
+				.in("update_id", ids)
+				.order("created_at", { ascending: true })
+		: { data: [] };
+
+const commentsByUpdate = new Map<string, typeof allComments>();
+for (const c of allComments ?? []) {
+	const list = commentsByUpdate.get(c.update_id) ?? [];
+	list.push(c);
+	commentsByUpdate.set(c.update_id, list);
+}
+
+const likedRaw = Astro.cookies.get("liked_updates")?.value ?? "";
+const likedIds = new Set(likedRaw.split(",").filter(Boolean));
+---
+
+<MainGridLayout title="Updates" description="Latest updates">
+	<div class="card-base rounded-[var(--radius-large)] p-4 md:p-6 mb-4">
+		<div class="font-bold text-xl text-90">Updates</div>
+		<div class="text-sm text-75 mt-1">Latest posts and announcements.</div>
+	</div>
+
+	{error && <div class="text-red-500 px-2">Updates load nahi ho payi: {error.message}</div>}
+
+	{!error && (updates ?? []).length === 0 && (
+		<div class="card-base rounded-[var(--radius-large)] p-6 text-center text-75">
+			Abhi tak koi post nahi hai.
+		</div>
+	)}
+
+	{(updates ?? []).map((u) => (
+		<UpdateCard
+			id={u.id}
+			content={u.content}
+			image_url={u.image_url}
+			likes_count={u.likes_count}
+			comments_count={u.comments_count}
+			created_at={u.created_at}
+			liked={likedIds.has(u.id)}
+			comments={commentsByUpdate.get(u.id) ?? []}
+		/>
+	))}
+
+	<UpdatesClientScript />
+</MainGridLayout>

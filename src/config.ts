@@ -56,8 +56,7 @@ export const navBarConfig: NavBarConfig = {
 export const profileConfig: ProfileConfig = {
 	avatar: "assets/images/demo-avatar.png", // Relative to the /src directory. Relative to the /public directory if it starts with '/'
 	name: "Ranjit Pandey",
-	bio: "🧠 ᴍɪɴᴅ || ɴᴇᴜʀᴏꜱᴄɪᴇɴᴄᴇ || ʀᴇꜱᴇᴀʀᴄʜ ",
-	bio: "💻 ꜱᴏꜰᴛᴡᴀʀᴇ || ʙᴏᴏᴋꜱ || ᴋɴᴏᴡʟᴇᴅɢᴇ || ʟɪꜰᴇꜱᴛʏʟᴇ.",
+	bio: "🧠 ᴍɪɴᴅ || ɴᴇᴜʀᴏꜱᴄɪᴇɴᴄᴇ || ʀᴇꜱᴇᴀʀᴄʜ || 💻 ꜱᴏꜰᴛᴡᴀʀᴇ || ʙᴏᴏᴋꜱ || ᴋɴᴏᴡʟᴇᴅɢᴇ || ʟɪꜰᴇꜱᴛʏʟᴇ.",
 	
 	links: [
 		{
@@ -78,7 +77,7 @@ export const profileConfig: ProfileConfig = {
 			icon: "fa6-brands:linkedin-in", // Visit https://icones.js.org/ for icon codes
 			// You will need to install the corresponding icon set if it's not already included
 			// `pnpm add @iconify-json/<icon-set-name>`
-			url: "www.linkedin.com/in/ranjitpandey",
+			url: "https://linkedin.com/in/ranjitpandey",
 			
 		},
 		
